@@ -1,23 +1,25 @@
-console.log('content.js loaded');
-
 const uniqueId = "custom-selection-div";
+const numericRegex = /^[0-9]+$/;
 
 document.addEventListener("selectionchange", (event) => {
-  var text = window.getSelection().toString().trim();
-  text = text.replace(/,/g, '')
-  if (text.length === 0) {
-    // 삭제
-    var existingDiv = document.getElementById(uniqueId);
-    if (existingDiv) {
-      existingDiv.parentNode.removeChild(existingDiv);
-    }
-    return;
+  // 이미 있던 애들을 정리한다
+  document.querySelectorAll(`[id="${uniqueId}"]`).forEach((e) => {
+    e.parentNode.removeChild(e);
+  });
+
+  const selectedText = window.getSelection().toString();
+  const refinedText = selectedText.trim().replace(/,/g, '');
+  if (!numericRegex.test(refinedText)) {
+    return
   }
-  console.log("Selected text: " + text);
+  // console.log("Selected text: " + refinedText);
 
   // unix인지 확인
-  if (!isNaN(parseInt(text))) {
-    showPopup(unixToISOString(parseInt(text)));
+  if (!isNaN(parseInt(refinedText))) {
+    const unix = parseInt(refinedText);
+    if (isConvertableUnix(unix)) {
+      showPopup(unixToISOString(unix));
+    }
     return
   }
 });
@@ -39,6 +41,15 @@ function showPopup(result) {
   div.style.border = "1px solid #ccc";
 
   document.body.appendChild(div);
+}
+
+function isConvertableUnix(unix) {
+  const date = new Date(unix*1000);
+  const year = date.getFullYear();
+  if (year < 2010 || 2040 < year) {
+    return false;
+  }
+  return true;
 }
 
 function unixToISOString(unix) {
